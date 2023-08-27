@@ -1,5 +1,6 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/dnn/dnn.hpp>
+#include <condition_variable>
 #include <queue>
 #include <mutex>
 #include <thread>
@@ -15,6 +16,7 @@ private:
 	std::mutex queueMutex;
 	bool processingRunning;
 	std::thread processingThread;
+	std::condition_variable frameAvailableCondition;
 
 	std::vector<std::string> getOutputsNames(const cv::dnn::Net& net);
 	void postprocess(cv::Mat& frame, const std::vector<cv::Mat>& outs);

@@ -59,10 +59,13 @@ void CarDetector::processFrames() {
 void CarDetector::pushProcessedFrame(const cv::Mat& frame) {
 	std::lock_guard<std::mutex> lock(outputMutex);
 	processedFramesQueue.push(frame.clone());
+	frameAvailableCondition.notify_one();
 }
 
 bool CarDetector::getProcessedFrame(cv::Mat& frame) {
-	std::lock_guard<std::mutex> lock(outputMutex);
+	std::unique_lock<std::mutex> lock(outputMutex);
+	frameAvailableCondition.wait(
+		lock, [this]() { return !processedFramesQueue.empty(); });
 	if (!processedFramesQueue.empty()) {
 		frame = processedFramesQueue.front();
 		processedFramesQueue.pop();

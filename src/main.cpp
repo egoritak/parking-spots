@@ -35,8 +35,8 @@ int main() {
 		cv::Mat processedFrame;
 		if (carDetector.getProcessedFrame(processedFrame)) {
 			saver.pushFrame(processedFrame);
-			cv::imshow("IP Camera Stream", processedFrame);
 		}
+		cv::imshow("IP Camera Stream", processedFrame);
 
 		if (cv::waitKey(1000 / 30) == 27) {
 			break;
