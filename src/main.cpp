@@ -3,6 +3,7 @@
 #include <opencv2/opencv.hpp>
 #include "../includes/FrameSaver.h"
 #include "../includes/CameraReader.h"
+#include "../includes/CarDetector.h"
 
 int main() {
 	std::string camera_path = "https://cdn08.vtomske.ru/hls/stream8.m3u8";
@@ -13,6 +14,9 @@ int main() {
 		std::cerr << "Error: Unable to open the video stream." << std::endl;
 		return -1;
 	}
+
+	CarDetector carDetector("../etc/yolo/yolov3.weights",
+							"../etc/yolo/yolov3.cfg");
 
 	cv::namedWindow("IP Camera Stream", cv::WINDOW_AUTOSIZE);
 	cv::Mat frame;
@@ -29,6 +33,8 @@ int main() {
 			break;
 		}
 
+		carDetector.detectCars(frame);
+
 		saver.pushFrame(frame);
 		saver.notify();
 
@@ -39,7 +45,7 @@ int main() {
 		}
 	}
 
-	saver.stop();  // Уведомляем saver о том, что пора завершаться
+	saver.stop();
 	camera.release();
 	saverThread.join();
 	cv::destroyAllWindows();
