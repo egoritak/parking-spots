@@ -1,10 +1,28 @@
 #include "../includes/CarDetector.h"
 
 CarDetector::CarDetector(const std::string& model, const std::string& config,
-						 float confThreshold, float nmsThreshold) {
-	net = cv::dnn::readNet(model, config);
-	this->confThreshold = confThreshold;
-	this->nmsThreshold = nmsThreshold;
+						 float confThreshold, float nmsThreshold)
+	: net(cv::dnn::readNet(model, config)),
+	  confThreshold(confThreshold),
+	  nmsThreshold(nmsThreshold),
+	  processingRunning(false) {
+}
+
+void CarDetector::pushFrame(const cv::Mat& frame) {
+	std::lock_guard<std::mutex> lock(queueMutex);
+	frameQueue.push(frame.clone());
+}
+
+void CarDetector::startProcessing() {
+	processingRunning = true;
+	processingThread = std::thread(&CarDetector::processFrames, this);
+}
+
+void CarDetector::stopProcessing() {
+	processingRunning = false;
+	if (processingThread.joinable()) {
+		processingThread.join();
+	}
 }
 
 void CarDetector::detectCars(cv::Mat& frame) {
@@ -16,6 +34,41 @@ void CarDetector::detectCars(cv::Mat& frame) {
 	net.forward(out, getOutputsNames(net));
 
 	postprocess(frame, out);
+}
+
+void CarDetector::processFrames() {
+	while (processingRunning) {
+		cv::Mat frame;
+		{
+			std::lock_guard<std::mutex> lock(queueMutex);
+			if (!frameQueue.empty()) {
+				frame = frameQueue.front();
+				frameQueue.pop();
+			}
+		}
+
+		if (!frame.empty()) {
+			detectCars(frame);
+			pushProcessedFrame(frame);
+		} else {
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		}
+	}
+}
+
+void CarDetector::pushProcessedFrame(const cv::Mat& frame) {
+	std::lock_guard<std::mutex> lock(outputMutex);
+	processedFramesQueue.push(frame.clone());
+}
+
+bool CarDetector::getProcessedFrame(cv::Mat& frame) {
+	std::lock_guard<std::mutex> lock(outputMutex);
+	if (!processedFramesQueue.empty()) {
+		frame = processedFramesQueue.front();
+		processedFramesQueue.pop();
+		return true;
+	}
+	return false;
 }
 
 std::vector<std::string> CarDetector::getOutputsNames(const cv::dnn::Net& net) {
@@ -64,4 +117,8 @@ void CarDetector::postprocess(cv::Mat& frame,
 		int classId = classIds[idx];
 		cv::rectangle(frame, box, cv::Scalar(0, 255, 0), 2);
 	}
+}
+
+CarDetector::~CarDetector() {
+	stopProcessing();
 }

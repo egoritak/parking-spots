@@ -13,11 +13,18 @@ private:
 	std::condition_variable condVar;
 	int image_counter = 0;
 	bool is_running_ = true;
+	std::thread savingThread;
+
+	void saveThreadFunction();
 
 public:
+	FrameSaver();
+	~FrameSaver();
+
 	void pushFrame(const cv::Mat& frame);
 	void saveFrames();
 	void notify();
 	bool isRunning() const;
 	void stop();
+	void start();
 };
