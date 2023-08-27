@@ -28,7 +28,7 @@ void FrameSaver::saveFrames() {
 			cv::Mat image_to_save = localQueue.front();
 			localQueue.pop();
 
-			std::string filename = "../frames/image_" +
+			std::string filename = "../etc/frames/image_" +
 								   std::to_string(image_counter++) + ".jpg";
 			cv::imwrite(filename, image_to_save);
 		}
