@@ -1,36 +1,22 @@
-#include <opencv2/opencv.hpp>
+#pragma once
+
+#include "IDetector.h"
 #include <opencv2/dnn/dnn.hpp>
-#include <condition_variable>
-#include <queue>
-#include <mutex>
-#include <thread>
 
-class CarDetector {
-private:
-	cv::dnn::Net net;
-	float confThreshold;
-	float nmsThreshold;
-	std::queue<cv::Mat> frameQueue;
-	std::queue<cv::Mat> processedFramesQueue;
-	std::mutex outputMutex;
-	std::mutex queueMutex;
-	bool processingRunning;
-	std::thread processingThread;
-	std::condition_variable frameAvailableCondition;
-
-	static std::vector<std::string> getOutputsNames(const cv::dnn::Net& net);
-	void postprocess(cv::Mat& frame, const std::vector<cv::Mat>& outs) const;
-	void detectCars(cv::Mat& frame);
-	void processFrames();
-
+class CarDetector : public IDetector {
 public:
-	CarDetector(const std::string& model, const std::string& config,
-				float confThreshold = 0.5, float nmsThreshold = 0.4);
-	~CarDetector();
+    CarDetector(const std::string& model, const std::string& config,
+                float confThreshold = 0.5, float nmsThreshold = 0.4);
 
-	void pushFrame(const cv::Mat& frame);
-	void startProcessing();
-	void stopProcessing();
-	void pushProcessedFrame(const cv::Mat& frame);
-	bool getProcessedFrame(cv::Mat& frame);
+protected:
+    void detectObjects(cv::Mat& frame) override;
+    void postprocess(cv::Mat& frame, const std::vector<cv::Mat>& outs) override;
+    void processFrames() override;
+
+private:
+    cv::dnn::Net net;
+    float confThreshold;
+    float nmsThreshold;
+
+    static std::vector<std::string> getOutputsNames(const cv::dnn::Net& net);
 };

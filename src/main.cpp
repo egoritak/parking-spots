@@ -5,7 +5,7 @@
 #include "../includes/CarDetector.h"
 
 int main() {
-    std::vector<std::string> camera_paths = {"https://cdn08.vtomske.ru/hls/stream8.m3u8", "../etc/examples/spot_cam.mp4"};
+    std::vector<std::string> camera_paths = {"../etc/examples/spot_cam.mp4", "https://cdn08.vtomske.ru/hls/stream8.m3u8"};
     CameraReader camera(0);
     for(const auto& camera_path : camera_paths) {
         if(camera = CameraReader(camera_path), camera.isOpened())
