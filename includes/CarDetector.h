@@ -18,8 +18,8 @@ private:
 	std::thread processingThread;
 	std::condition_variable frameAvailableCondition;
 
-	std::vector<std::string> getOutputsNames(const cv::dnn::Net& net);
-	void postprocess(cv::Mat& frame, const std::vector<cv::Mat>& outs);
+	static std::vector<std::string> getOutputsNames(const cv::dnn::Net& net);
+	void postprocess(cv::Mat& frame, const std::vector<cv::Mat>& outs) const;
 	void detectCars(cv::Mat& frame);
 	void processFrames();
 

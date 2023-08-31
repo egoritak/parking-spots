@@ -86,29 +86,29 @@ std::vector<std::string> CarDetector::getOutputsNames(const cv::dnn::Net& net) {
 }
 
 void CarDetector::postprocess(cv::Mat& frame,
-							  const std::vector<cv::Mat>& outs) {
+							  const std::vector<cv::Mat>& outs) const {
 	std::vector<int> classIds;
 	std::vector<float> confidences;
 	std::vector<cv::Rect> boxes;
 
 	for (size_t i = 0; i < outs.size(); ++i) {
-		float* data = (float*)outs[i].data;
+		auto* data = (float*)outs[i].data;
 		for (int j = 0; j < outs[i].rows; ++j, data += outs[i].cols) {
 			cv::Mat scores = outs[i].row(j).colRange(5, outs[i].cols);
 			cv::Point classIdPoint;
 			double confidence;
 			minMaxLoc(scores, 0, &confidence, 0, &classIdPoint);
 			if (confidence > confThreshold) {
-				int centerX = (int)(data[0] * frame.cols);
-				int centerY = (int)(data[1] * frame.rows);
-				int width = (int)(data[2] * frame.cols);
-				int height = (int)(data[3] * frame.rows);
+				int centerX = (int)(data[0] * (float)frame.cols);
+				int centerY = (int)(data[1] * (float)frame.rows);
+				int width = (int)(data[2] * (float)frame.cols);
+				int height = (int)(data[3] * (float)frame.rows);
 				int left = centerX - width / 2;
 				int top = centerY - height / 2;
 
 				classIds.push_back(classIdPoint.x);
 				confidences.push_back((float)confidence);
-				boxes.push_back(cv::Rect(left, top, width, height));
+				boxes.emplace_back(cv::Rect(left, top, width, height));
 			}
 		}
 	}
@@ -117,7 +117,6 @@ void CarDetector::postprocess(cv::Mat& frame,
 	cv::dnn::NMSBoxes(boxes, confidences, confThreshold, nmsThreshold, indices);
 	for (int idx : indices) {
 		cv::Rect box = boxes[idx];
-		int classId = classIds[idx];
 		cv::rectangle(frame, box, cv::Scalar(0, 255, 0), 2);
 	}
 }

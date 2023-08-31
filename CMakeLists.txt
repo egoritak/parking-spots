@@ -13,12 +13,14 @@ find_package(OpenCV REQUIRED)
 # Указываем директории для заголовочных файлов
 include_directories(${OpenCV_INCLUDE_DIRS})
 include_directories(includes)
+include(clang_tidy.cmake)
 
 # Указываем директорию для исходных файлов
 file(GLOB SOURCES "src/*.cpp")
 
 # Создаем исполняемый файл с именем, например, "cameraApp"
-add_executable(cameraApp ${SOURCES})
+add_executable(cameraApp ${SOURCES}
+        src/main.cpp)
 
 # Связываем библиотеки OpenCV с нашим проектом
 target_link_libraries(cameraApp ${OpenCV_LIBS})

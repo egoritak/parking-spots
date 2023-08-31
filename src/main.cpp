@@ -5,12 +5,15 @@
 #include "../includes/CarDetector.h"
 
 int main() {
-	std::string camera_path = "https://cdn08.vtomske.ru/hls/stream8.m3u8";
+	//std::string camera_path = "https://cdn08.vtomske.ru/hls/stream8.m3u8";
+    std::string camera_path = "../etc/examples/spot_cam.mp4";
 	CameraReader camera(camera_path);
 
 	if (!camera.isOpened()) {
 		std::cerr << "Error: Unable to open the video stream." << std::endl;
-		return -1;
+		camera.release();
+        camera = CameraReader(0);
+        //return -1;
 	}
 
 	CarDetector carDetector("../etc/yolo/yolov3.weights",
