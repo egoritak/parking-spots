@@ -8,17 +8,20 @@
 
 class IDetector {
 public:
+    IDetector(const std::string& model, const std::string& config,
+              float confThreshold, float nmsThreshold);
     virtual ~IDetector();
 
     void pushFrame(const cv::Mat& frame);
     void startProcessing();
     void stopProcessing();
     bool getProcessedFrame(cv::Mat& frame);
+    std::vector<std::string> getOutputsNames(const cv::dnn::Net& net);
 
 protected:
-    virtual void detectObjects(cv::Mat& frame) = 0;
-    virtual void postprocess(cv::Mat& frame, const std::vector<cv::Mat>& outs) = 0;
-    virtual void processFrames() = 0;
+    virtual void detectObjects(cv::Mat& frame);
+    virtual void postprocess(cv::Mat& frame, const std::vector<cv::Mat>& outs);
+    virtual void processFrames();
 
     std::queue<cv::Mat> frameQueue;
     std::queue<cv::Mat> processedFramesQueue;
@@ -27,4 +30,10 @@ protected:
     bool processingRunning = false;
     std::thread processingThread;
     std::condition_variable frameAvailableCondition;
+
+    cv::dnn::Net net;
+    float confThreshold;
+    float nmsThreshold;
+
+    int targetClassId;
 };
